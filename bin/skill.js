@@ -10,14 +10,19 @@ const commands = {
   list: require('../src/commands/list'),
   versions: require('../src/commands/versions'),
   swap: require('../src/commands/swap'),
+  config: require('../src/commands/config'),
   // update and status land in the next pass.
 };
 
 const HELP = `skill — static md-file installer & version-swapper
 
-usage:
-  skill init <source-repo-url> [--preset claude|copilot|none]
-                                    clone/cache the source repo, create .skilllock.json
+setup (once, global):
+  skill config source <url>         set your default catalog repo URL
+  skill config show                 show current global config
+
+per-project:
+  skill init [--preset claude|copilot|none]
+                                    init project, using default source (or pass URL)
   skill install <stack>             install every .md tagged with <stack>
   skill list                        list installed files (dest path, commit, stacks)
   skill versions <path>             list source commits that touched <path>
@@ -34,8 +39,6 @@ flags:
   --no-pull     (install) skip pulling the source cache
   --force       (install) overwrite locally-modified / conflicting files
 
-<path> in versions/swap accepts either the catalog path or the real project path.
-
 not yet implemented: update, status`;
 
 function main() {
@@ -51,7 +54,7 @@ function main() {
     return;
   }
 
-  if (cmd === 'update' || cmd === 'status') {
+  if (cmd === 'update' || cmd === 'status' || cmd === 'use') {
     console.error(colors.yellow(`"${cmd}" is not implemented yet.`));
     process.exit(2);
   }

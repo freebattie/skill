@@ -5,20 +5,22 @@ const git = require('../git');
 const cache = require('../cache');
 const lockfile = require('../lockfile');
 const { getPreset, presetNames } = require('../mappings');
+const globalConfig = require('../config');
 const { colors } = require('../util');
 
 /**
- * skill init <source-repo-url> [--preset claude|copilot|none]
+ * skill init [<source-repo-url>] [--preset claude|copilot|none]
  *
- * Clone/cache the source repo and create an empty .skilllock.json in the
- * current directory. --preset sets the path-mapping strategy so installed
- * files land in the correct real project locations (e.g. .claude/skills/).
+ * URL is optional if a default source has been set via `skill config source <url>`.
+ * --preset sets the path-mapping strategy so installed files land in the
+ * correct real project locations (e.g. .claude/skills/).
  */
 function init(argv) {
-  const url = argv.positionals[0];
+  const url = argv.positionals[0] || globalConfig.get('source');
   if (!url) {
     throw new Error(
-      `usage: skill init <source-repo-url> [--preset ${presetNames().join('|')}]`
+      `usage: skill init <source-repo-url> [--preset ${presetNames().join('|')}]\n` +
+        `  or set a default: skill config source <url>`
     );
   }
 
