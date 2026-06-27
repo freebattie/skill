@@ -1,0 +1,20 @@
+{
+  "name": "skill",
+  "version": "0.1.0",
+  "description": "Static md-file installer & version-swapper backed by a git source repo.",
+  "bin": {
+    "skill": "bin/skill.js"
+  },
+  "type": "commonjs",
+  "scripts": {
+    "test": "node test/run.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "license": "MIT"
+}

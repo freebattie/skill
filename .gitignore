@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment / secrets
+.env
+.env.*
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# This tool's own local cache lives in ~/.skill, not the repo —
+# but ignore it here too in case anyone points the cache at the project.
+.skill/
+
+# NOTE: do NOT ignore .skilllock.json — that file is meant to be committed
+# in projects that *consume* skill. This repo is the tool itself, so it has
+# no lockfile, but the rule is intentionally absent.
