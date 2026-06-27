@@ -8,6 +8,7 @@ const cache = require('../cache');
 const source = require('../source');
 const lockfile = require('../lockfile');
 const { mapPath } = require('../mappings');
+const versions = require('../versions');
 const { findProjectRoot, writeFileEnsured, colors } = require('../util');
 
 /**
@@ -95,9 +96,10 @@ function install(argv) {
       commit: headCommit,
       installed_at: now,
     };
+    const v = versions.snapshot(projectRoot, catalogPath, newContent, `catalog @ ${headCommit}`);
     console.log(
       colors.green(`install ${dest}`) +
-        colors.dim(` (catalog: ${catalogPath} @ ${headCommit})`)
+        colors.dim(` (catalog: ${catalogPath} @ ${headCommit}, saved as v${v})`)
     );
     installed++;
   }

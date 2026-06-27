@@ -7,6 +7,7 @@ const git = require('../git');
 const cache = require('../cache');
 const lockfile = require('../lockfile');
 const { unmapPath } = require('../mappings');
+const versions = require('../versions');
 const { findProjectRoot, writeFileEnsured, colors } = require('../util');
 
 /**
@@ -65,9 +66,10 @@ function swap(argv) {
   lock.files[catalogPath].installed_at = new Date().toISOString();
   lockfile.write(projectRoot, lock);
 
+  const v = versions.snapshot(projectRoot, catalogPath, content, `swapped from catalog @ ${commit}`);
   console.log(
     colors.green(`swapped ${dest}`) +
-      colors.dim(` ${prev} -> ${commit}`)
+      colors.dim(` ${prev} -> ${commit} (saved as v${v})`)
   );
 }
 

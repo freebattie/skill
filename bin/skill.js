@@ -11,7 +11,9 @@ const commands = {
   versions: require('../src/commands/versions'),
   swap: require('../src/commands/swap'),
   config: require('../src/commands/config'),
-  // update and status land in the next pass.
+  save: require('../src/commands/save'),
+  history: require('../src/commands/history'),
+  checkout: require('../src/commands/checkout'),
 };
 
 const HELP = `skill — static md-file installer & version-swapper
@@ -39,6 +41,11 @@ flags:
   --no-pull     (install) skip pulling the source cache
   --force       (install) overwrite locally-modified / conflicting files
 
+local version history (stored in ~/.skill/versions/, never in project repo):
+  skill save <path>               snapshot current file state as next version
+  skill history <path>            list all versions: v1, v2... with date + source
+  skill checkout <path> <vN>      restore file to version vN (recorded as new version)
+
 not yet implemented: update, status`;
 
 function main() {
@@ -54,7 +61,7 @@ function main() {
     return;
   }
 
-  if (cmd === 'update' || cmd === 'status' || cmd === 'use') {
+  if (cmd === 'update' || cmd === 'status') {
     console.error(colors.yellow(`"${cmd}" is not implemented yet.`));
     process.exit(2);
   }
