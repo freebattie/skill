@@ -33,8 +33,8 @@ function write(projectRoot, data) {
 }
 
 /** Create a fresh, empty lockfile pointing at `source`. */
-function create(projectRoot, source) {
-  const data = { source, files: {} };
+function create(projectRoot, source, preset = 'none', mappings = {}) {
+  const data = { source, preset, mappings, files: {} };
   write(projectRoot, data);
   return data;
 }

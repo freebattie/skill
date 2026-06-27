@@ -5,16 +5,18 @@ const fs = require('fs');
 const git = require('../git');
 const cache = require('../cache');
 const lockfile = require('../lockfile');
+const { unmapPath } = require('../mappings');
 const { findProjectRoot, colors } = require('../util');
 
 /**
  * skill versions <path>
  *
- * List the source-repo commits that touched <path> — the swap targets.
+ * <path> can be the catalog path or the real project path.
+ * Lists source commits that touched the file — the swap targets.
  */
 function versions(argv) {
-  const rel = argv.positionals[0] ? argv.positionals[0].replace(/\\/g, '/') : null;
-  if (!rel) throw new Error('usage: skill versions <path>');
+  const rawPath = argv.positionals[0] ? argv.positionals[0].replace(/\\/g, '/') : null;
+  if (!rawPath) throw new Error('usage: skill versions <path>');
 
   const projectRoot = findProjectRoot();
   const lock = lockfile.read(projectRoot);
@@ -23,11 +25,18 @@ function versions(argv) {
     throw new Error(`source cache missing for ${lock.source}. Run \`skill init ${lock.source}\`.`);
   }
 
-  const current = lock.files[rel] ? lock.files[rel].commit : null;
-  const commits = git.logFor(cacheDir, rel);
+  // Resolve to catalog path whether user typed catalog or project path.
+  let catalogPath = rawPath;
+  if (!lock.files[rawPath]) {
+    const unmapped = unmapPath(rawPath, lock.mappings || {});
+    if (unmapped) catalogPath = unmapped;
+  }
+
+  const current = lock.files[catalogPath] ? lock.files[catalogPath].commit : null;
+  const commits = git.logFor(cacheDir, catalogPath);
 
   if (commits.length === 0) {
-    console.log(colors.yellow(`no commits touch ${rel} in the source repo.`));
+    console.log(colors.yellow(`no commits touch ${catalogPath} in the source repo.`));
     return;
   }
 

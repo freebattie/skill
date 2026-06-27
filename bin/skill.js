@@ -16,17 +16,25 @@ const commands = {
 const HELP = `skill — static md-file installer & version-swapper
 
 usage:
-  skill init <source-repo-url>      clone/cache the source repo, create .skilllock.json
+  skill init <source-repo-url> [--preset claude|copilot|none]
+                                    clone/cache the source repo, create .skilllock.json
   skill install <stack>             install every .md tagged with <stack>
-  skill list                        list installed files (path, commit, stacks)
+  skill list                        list installed files (dest path, commit, stacks)
   skill versions <path>             list source commits that touched <path>
   skill swap <path> <commit>        swap a file to a specific source commit
   skill swap <path> --latest        swap a file to its newest source commit
+
+presets (--preset on init):
+  none      mirror catalog paths as-is (default)
+  claude    catalog skills/ -> .claude/skills/, agents/ -> .claude/agents/
+  copilot   catalog skills/ -> .github/prompts/, instructions/ -> .github/instructions/
 
 flags:
   --dry-run     (install) print what would change, write nothing
   --no-pull     (install) skip pulling the source cache
   --force       (install) overwrite locally-modified / conflicting files
+
+<path> in versions/swap accepts either the catalog path or the real project path.
 
 not yet implemented: update, status`;
 

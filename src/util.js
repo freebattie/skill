@@ -26,15 +26,31 @@ function writeFileEnsured(dest, content) {
   fs.writeFileSync(dest, content, 'utf8');
 }
 
-/** Parse `--flag` style args into { flags: Set, positionals: [] }. */
+/**
+ * Parse args into { flags: Set, options: Map, positionals: [] }.
+ *   --flag          → flags.has('flag')
+ *   --key value     → options.get('key') === 'value'
+ */
 function parseArgs(argv) {
   const flags = new Set();
+  const options = new Map();
   const positionals = [];
-  for (const a of argv) {
-    if (a.startsWith('--')) flags.add(a.slice(2));
-    else positionals.push(a);
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a.startsWith('--')) {
+      const key = a.slice(2);
+      const next = argv[i + 1];
+      if (next !== undefined && !next.startsWith('--')) {
+        options.set(key, next);
+        i++;
+      } else {
+        flags.add(key);
+      }
+    } else {
+      positionals.push(a);
+    }
   }
-  return { flags, positionals };
+  return { flags, options, positionals };
 }
 
 const colors = {

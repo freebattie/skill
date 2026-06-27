@@ -7,13 +7,15 @@ const git = require('../git');
 const cache = require('../cache');
 const source = require('../source');
 const lockfile = require('../lockfile');
+const { mapPath } = require('../mappings');
 const { findProjectRoot, writeFileEnsured, colors } = require('../util');
 
 /**
  * skill install <stack>
  *
  * Pull the source cache, select every .md whose `stacks` contains <stack>,
- * mirror each into the project, and record it in the lockfile at HEAD.
+ * translate each catalog path to its real project destination (via the preset
+ * mappings stored in the lockfile), copy the file, and record it.
  *
  * Flags: --dry-run, --no-pull, --force
  */
@@ -30,6 +32,7 @@ function install(argv) {
   const projectRoot = findProjectRoot();
   const lock = lockfile.read(projectRoot);
   const cacheDir = cache.cacheDirFor(lock.source);
+  const mappings = lock.mappings || {};
 
   if (!fs.existsSync(cacheDir)) {
     throw new Error(
@@ -58,38 +61,44 @@ function install(argv) {
   const now = new Date().toISOString();
 
   for (const file of selected) {
-    const rel = file.path;
-    const destAbs = path.join(projectRoot, rel);
-    const newContent = git.show(cacheDir, headCommit, rel);
+    const catalogPath = file.path;
+    const dest = mapPath(catalogPath, mappings);
+    const destAbs = path.join(projectRoot, dest);
+    const newContent = git.show(cacheDir, headCommit, catalogPath);
 
-    // Conflict guard: don't clobber local edits or unknown existing files.
     if (fs.existsSync(destAbs) && !force) {
       const onDisk = fs.readFileSync(destAbs, 'utf8');
-      const locked = lock.files[rel];
-      const baseline = locked ? git.show(cacheDir, locked.commit, rel) : null;
-
+      const locked = lock.files[catalogPath];
+      const baseline = locked ? git.show(cacheDir, locked.commit, catalogPath) : null;
       const conflict = locked ? onDisk !== baseline : onDisk !== newContent;
       if (conflict) {
         const why = locked ? 'locally modified' : 'exists and differs from source';
-        console.log(colors.yellow(`skip ${rel} (${why}); use --force to overwrite.`));
+        console.log(colors.yellow(`skip ${dest} (${why}); use --force to overwrite.`));
         skipped++;
         continue;
       }
     }
 
     if (dryRun) {
-      console.log(colors.dim(`would install ${rel} @ ${headCommit} [${file.stacks.join(', ')}]`));
+      console.log(
+        colors.dim(`would install ${catalogPath}`) +
+          colors.dim(` -> ${dest} @ ${headCommit} [${file.stacks.join(', ')}]`)
+      );
       installed++;
       continue;
     }
 
     writeFileEnsured(destAbs, newContent);
-    lock.files[rel] = {
+    lock.files[catalogPath] = {
+      dest,
       stacks: file.stacks,
       commit: headCommit,
       installed_at: now,
     };
-    console.log(colors.green(`install ${rel}`) + colors.dim(` @ ${headCommit}`));
+    console.log(
+      colors.green(`install ${dest}`) +
+        colors.dim(` (catalog: ${catalogPath} @ ${headCommit})`)
+    );
     installed++;
   }
 

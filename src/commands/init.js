@@ -4,18 +4,30 @@ const fs = require('fs');
 const git = require('../git');
 const cache = require('../cache');
 const lockfile = require('../lockfile');
+const { getPreset, presetNames } = require('../mappings');
 const { colors } = require('../util');
 
 /**
- * skill init <source-repo-url>
+ * skill init <source-repo-url> [--preset claude|copilot|none]
  *
  * Clone/cache the source repo and create an empty .skilllock.json in the
- * current directory pointing at that source.
+ * current directory. --preset sets the path-mapping strategy so installed
+ * files land in the correct real project locations (e.g. .claude/skills/).
  */
 function init(argv) {
   const url = argv.positionals[0];
   if (!url) {
-    throw new Error('usage: skill init <source-repo-url>');
+    throw new Error(
+      `usage: skill init <source-repo-url> [--preset ${presetNames().join('|')}]`
+    );
+  }
+
+  const presetName = argv.options.get('preset') || 'none';
+  const mappings = getPreset(presetName);
+  if (mappings === null) {
+    throw new Error(
+      `unknown preset "${presetName}". Available: ${presetNames().join(', ')}`
+    );
   }
 
   const projectRoot = process.cwd();
@@ -47,10 +59,10 @@ function init(argv) {
     return;
   }
 
-  lockfile.create(projectRoot, url);
+  lockfile.create(projectRoot, url, presetName, mappings);
   console.log(
     colors.green(`initialized ${lockfile.LOCKFILE_NAME}`) +
-      ` (source: ${url}, HEAD ${git.head(cacheDir)})`
+      ` (source: ${url}, preset: ${presetName}, HEAD ${git.head(cacheDir)})`
   );
 }
 
